@@ -1,0 +1,224 @@
+C:\Windows\system32>cd C:\Program Files\MySQL\MySQL Server 8.0\bin
+
+C:\Program Files\MySQL\MySQL Server 8.0\bin>mysql
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 16
+Server version: 8.0.20 MySQL Community Server - GPL
+
+Copyright (c) 2000, 2020, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+---задание 1
+mysql> use shop;
+Database changed
+mysql> select id, name, birthday_at from users;
++----+-----------+-------------+
+| id | name      | birthday_at |
++----+-----------+-------------+
+|  1 | Геннадий  | 1990-10-05  |
+|  2 | Наталья   | 1984-11-12  |
+|  3 | Александр | 1985-05-20  |
+|  4 | Сергей    | 1988-02-14  |
+|  5 | Иван      | 1998-01-12  |
+|  6 | Мария     | 1992-08-29  |
++----+-----------+-------------+
+6 rows in set (0.00 sec)
+
+---задание 2
+
+mysql> select * from orders;
+Empty set (0.12 sec)
+
+mysql> select * from orders_products;
+Empty set (0.18 sec)
+
+mysql> insert into oders (user_id) select id from users where name = 'Геннадий';
+ERROR 1146 (42S02): Table 'shop.oders' doesn't exist
+mysql> insert into orders (user_id) select id from users where name = 'Геннадий';
+Query OK, 1 row affected (0.13 sec)
+Records: 1  Duplicates: 0  Warnings: 0
+
+mysql> insert into orders_products (order_id, product_id, total) select last_insert_id(), id, 2 from products where name = 'Intel Core i5-7400';
+Query OK, 1 row affected (0.14 sec)
+Records: 1  Duplicates: 0  Warnings: 0
+
+mysql> insert into orders (user_id) select id from users where name = 'Наталья';
+Query OK, 1 row affected (0.14 sec)
+Records: 1  Duplicates: 0  Warnings: 0
+
+mysql> insert into orders_products (order_id, product_id, total) select last_insert_id(), id, 1 from products where name in ('Intel Core i5-7400', 'Gigabyte H310M S2H');
+Query OK, 2 rows affected (0.17 sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+mysql> insert into orders (user_id) select id from users where name = 'Иван';
+Query OK, 1 row affected (0.12 sec)
+Records: 1  Duplicates: 0  Warnings: 0
+
+mysql> insert into orders_products (order_id, product_id, total) select last_insert_id(), id, 1 from products where name in ('AMD FX-8320', 'Asus rog maximus x hero');
+Query OK, 2 rows affected (0.15 sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+mysql> SELECT DISTINCT USER_ID FROM ORDERS;
++---------+
+| USER_ID |
++---------+
+|       1 |
+|       2 |
+|       5 |
++---------+
+3 rows in set (0.10 sec)
+
+mysql> SELECT ID, name, birthday_at from users where id in (select distinct user_id from orders);
++----+----------+-------------+
+| ID | name     | birthday_at |
++----+----------+-------------+
+|  1 | Геннадий | 1990-10-05  |
+|  2 | Наталья  | 1984-11-12  |
+|  5 | Иван     | 1998-01-12  |
++----+----------+-------------+
+3 rows in set (0.02 sec)
+
+mysql> select id, name, price, catalog_id from products;
++----+-------------------------+----------+------------+
+| id | name                    | price    | catalog_id |
++----+-------------------------+----------+------------+
+|  1 | Intel Core i3-8100      |  7890.00 |          1 |
+|  2 | Intel Core i5-7400      | 12700.00 |          1 |
+|  3 | AMD FX-8320E            |  4780.00 |          1 |
+|  4 | AMD FX-8320             |  7120.00 |          1 |
+|  5 | ASUS ROG MAXIMUS X HERO | 19310.00 |          2 |
+|  6 | Gigabyte H310M S2H      |  4790.00 |          2 |
+|  7 | MSI B250M GAMING PRO    |  5060.00 |          2 |
++----+-------------------------+----------+------------+
+7 rows in set (0.00 sec)
+
+mysql> select * from catalogs;
++----+--------------------+
+| id | name               |
++----+--------------------+
+|  1 | Процессоры         |
+|  2 | Материнские платы  |
+|  3 | Видеокарты         |
+|  4 | Жесткие диски      |
+|  5 | Оперативная память |
++----+--------------------+
+5 rows in set (0.00 sec)
+
+mysql> select id, name, price, (select name from catalogs where id = products.catalog_id) as catalog from products;
++----+-------------------------+----------+-------------------+
+| id | name                    | price    | catalog           |
++----+-------------------------+----------+-------------------+
+|  1 | Intel Core i3-8100      |  7890.00 | Процессоры        |
+|  2 | Intel Core i5-7400      | 12700.00 | Процессоры        |
+|  3 | AMD FX-8320E            |  4780.00 | Процессоры        |
+|  4 | AMD FX-8320             |  7120.00 | Процессоры        |
+|  5 | ASUS ROG MAXIMUS X HERO | 19310.00 | Материнские платы |
+|  6 | Gigabyte H310M S2H      |  4790.00 | Материнские платы |
+|  7 | MSI B250M GAMING PRO    |  5060.00 | Материнские платы |
++----+-------------------------+----------+-------------------+
+7 rows in set (0.14 sec)
+
+
+mysql> select p.id, p.name, p.price, c.name as catalog from products as p left join catalogs as c on p.catalog_id = c.id;
++----+-------------------------+----------+-------------------+
+| id | name                    | price    | catalog           |
++----+-------------------------+----------+-------------------+
+|  1 | Intel Core i3-8100      |  7890.00 | Процессоры        |
+|  2 | Intel Core i5-7400      | 12700.00 | Процессоры        |
+|  3 | AMD FX-8320E            |  4780.00 | Процессоры        |
+|  4 | AMD FX-8320             |  7120.00 | Процессоры        |
+|  5 | ASUS ROG MAXIMUS X HERO | 19310.00 | Материнские платы |
+|  6 | Gigabyte H310M S2H      |  4790.00 | Материнские платы |
+|  7 | MSI B250M GAMING PRO    |  5060.00 | Материнские платы |
++----+-------------------------+----------+-------------------+
+7 rows in set (0.00 sec)
+----задание 3
+mysql> drop table if exists flights;
+Query OK, 0 rows affected, 1 warning (0.10 sec)
+
+
+mysql> create table flights (id serial primary key, `from` VARCHAR(255) COMMENT 'Город отправления', `to` VARCHAR(255) COMMENT 'Город прибытия') comment = 'Рейсы';
+Query OK, 0 rows affected (1.14 sec)
+
+mysql> insert into flights (`from`, `to`) values ('moscow','omsk'), ('novgorod', 'kazan'), ('irkutsk', 'moskow'), ('omsk', 'irkutsk'), ('moscow', 'kazan');
+Query OK, 5 rows affected (0.19 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> create table cities ( id serial primary key, label varchar(255) comment 'Код города', name varchar(255) comment 'Название города') comment ='Словарь городов';
+Query OK, 0 rows affected (0.80 sec)
+
+mysql> insert into cities (label, name) values ('moscow','Москва'), ('irkutsk', 'Иркутск'),('novgorod','Новгород'), ('omsk', 'Омск'), ('kazan', 'Казань');'
+Query OK, 5 rows affected (0.04 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+    
+mysql> select * from flights;
++----+----------+---------+
+| id | from     | to      |
++----+----------+---------+
+|  1 | moscow   | omsk    |
+|  2 | novgorod | kazan   |
+|  3 | irkutsk  | moskow  |
+|  4 | omsk     | irkutsk |
+|  5 | moscow   | kazan   |
++----+----------+---------+
+5 rows in set (0.00 sec)
+
+mysql> select * from cities;
++----+----------+----------+
+| id | label    | name     |
++----+----------+----------+
+|  1 | moscow   | Москва   |
+|  2 | irkutsk  | Иркутск  |
+|  3 | novgorod | Новгород |
+|  4 | omsk     | Омск     |
+|  5 | kazan    | Казань   |
+|  6 | moscow   | Москва   |
+|  7 | irkutsk  | Иркутск  |
+|  8 | novgorod | Новгород |
+|  9 | omsk     | Омск     |
+| 10 | kazan    | Казань   |
++----+----------+----------+
+10 rows in set (0.00 sec)
+
+
+mysql> select id, `from`, `to` from flights;
++----+----------+---------+
+| id | from     | to      |
++----+----------+---------+
+|  1 | moscow   | omsk    |
+|  2 | novgorod | kazan   |
+|  3 | irkutsk  | moskow  |
+|  4 | omsk     | irkutsk |
+|  5 | moscow   | kazan   |
++----+----------+---------+
+5 rows in set (0.00 sec)
+
+mysql> select id, (select name from cities where label = flights.from) as `from`,  (select name from cities where label = flights.to) as `to` from flights;
++----+----------+---------+
+| id | from     | to      |
++----+----------+---------+
+|  1 | Москва   | Омск    |
+|  2 | Новгород | Казань  |
+|  3 | Иркутск  | NULL    |
+|  4 | Омск     | Иркутск |
+|  5 | Москва   | Казань  |
++----+----------+---------+
+5 rows in set (0.00 sec)
+
+mysql> select f.id, cities_from.name as `from`, cities_to.name AS `TO` FROM FLIGHTS AS F left join cities as cities_from on f.from = cities_from.label left join cities as cities_to on f.to = cities_to.label;
++----+----------+---------+
+| id | from     | TO      |
++----+----------+---------+
+|  1 | Москва   | Омск    |
+|  2 | Новгород | Казань  |
+|  3 | Иркутск  | NULL    |
+|  4 | Омск     | Иркутск |
+|  5 | Москва   | Казань  |
++----+----------+---------+
+5 rows in set (0.00 sec)
